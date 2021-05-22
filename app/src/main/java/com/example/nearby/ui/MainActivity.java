@@ -98,8 +98,6 @@ public class MainActivity extends AppCompatActivity implements GetPlacesPresente
     }
     @Override
     public void onGetPlacesSuccess(FoursquareResponseModel foursquareResponseModel) {
-        Toast.makeText(this, foursquareResponseModel.getResponse()
-                .getVenues().size() + "", Toast.LENGTH_SHORT).show();
 
         if(foursquareResponseModel.getResponse().getVenues().size()!=0) {
             for (int i = 0; i < foursquareResponseModel.getResponse()
@@ -125,7 +123,6 @@ public class MainActivity extends AppCompatActivity implements GetPlacesPresente
     public void onGetPlacesFail(String message) {
         recyclerView.setVisibility(View.GONE);
         constraintLayoutError.setVisibility(View.VISIBLE);
-        Toast.makeText(this, "Fail", Toast.LENGTH_SHORT).show();
     }
 
     @Override

@@ -83,12 +83,12 @@ public class MainAdapter extends RecyclerView.Adapter<MainAdapter.MainAdapterVie
 //        Glide.with(context).load().into(holder.itemImage);
         if(foursquarePlaceDetailsResponseModel.getResponse().getVenue().getBestPhoto()!=null) {
 //            Log.d("targetId",  + " is there");
-            url = foursquarePlaceDetailsResponseModel.getResponse()
+/*            url = foursquarePlaceDetailsResponseModel.getResponse()
                     .getVenue().getBestPhoto().getPrefix() + "" + foursquarePlaceDetailsResponseModel.getResponse()
                     .getVenue().getBestPhoto().getWidth() + "x" + foursquarePlaceDetailsResponseModel.getResponse()
                     .getVenue().getBestPhoto().getHeight() + "" + foursquarePlaceDetailsResponseModel.getResponse()
                     .getVenue().getBestPhoto().getSuffix();
-            Glide.with(context).load(url).into(s);
+            Glide.with(context).load(url).into(s);*/
 
         }        else {
             Log.d("targetId", " is null");

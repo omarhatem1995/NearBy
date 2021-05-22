@@ -37,6 +37,9 @@ public class GetPlacesPresenter {
     private LocationCallback locationCallback;
     private FusedLocationProviderClient fusedLocationClient;
 
+    private static final long SMALLEST_DISPLACEMENT = 1000;
+
+    int firstTime = 0;
 
     private MainAdapter mainAdapter;
     private RecyclerView recyclerView;
@@ -72,12 +75,13 @@ public class GetPlacesPresenter {
         });
     }
 
-
     public void getLastKnownLoccation() {
-
         locationRequest = LocationRequest.create();
         locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-        locationRequest.setInterval(20 * 1000);
+//        locationRequest.setInterval(20 * 1000);
+        locationRequest.setInterval(0);
+        locationRequest.setFastestInterval(0);
+        locationRequest.setSmallestDisplacement(SMALLEST_DISPLACEMENT);
         locationCallback = new LocationCallback() {
             @Override
             public void onLocationResult(LocationResult locationResult) {
@@ -88,8 +92,12 @@ public class GetPlacesPresenter {
                     if (location != null) {
                         double wayLatitude = location.getLatitude();
                         double wayLongitude = location.getLongitude();
+
                         Log.d("lastKnown ", "locationResult" + wayLatitude + " , " + wayLongitude);
-//                        txtLocation.setText(String.format(Locale.US, "%s -- %s", wayLatitude, wayLongitude));
+                            if(firstTime != 1){
+                                getLastKnownLoccation();
+                            }
+                        firstTime = 1;
                     }
                 }
             }
