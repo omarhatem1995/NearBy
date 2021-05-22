@@ -3,11 +3,15 @@ package com.example.nearby.ui;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.ConstraintLayout;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.Manifest;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.location.LocationManager;
 import android.os.Bundle;
 import android.provider.Settings;
@@ -40,30 +44,51 @@ public class MainActivity extends AppCompatActivity implements GetPlacesPresente
     private RecyclerView recyclerView;
     private ConstraintLayout constraintLayoutNoPlaces, constraintLayoutError;
 
+    private int locationAccess = 0;
+
+    private Boolean mLocationPermissionGranted = false;
+    private static final String FINE_LOCATION = Manifest.permission.ACCESS_FINE_LOCATION;
+    private static final String COARSE_LOCATION = Manifest.permission.ACCESS_COARSE_LOCATION;
+    private static final int LOCATION_PERMISSION_REQUEST_CODE = 1234;
+    private static final int REQUEST_CHECK_SETTINGS = 1;
+    private static final float DEFAULT_ZOOM = 15f;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        spinnerDialog = new SpinnerDialog(this);
+        initViews();
+        getLocationPermission();
 
+        if (mLocationPermissionGranted) {
+
+            final LocationManager manager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+
+            if (!manager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+                buildAlertMessageNoGps();
+            } else {
+                checkLastMode();
+            }
+        }else {
+            getLocationPermission();
+        }
+
+    }
+
+    private void initViews() {
         appMode = findViewById(R.id.app_mode);
         recyclerView = findViewById(R.id.venues_recyclerview);
         constraintLayoutNoPlaces = findViewById(R.id.no_places_constraint);
         constraintLayoutError = findViewById(R.id.error_constraint);
+
+        spinnerDialog = new SpinnerDialog(this);
 
         venuesItems = new ArrayList<>();
 
         getPlacesPresenter = new GetPlacesPresenter(this,
                 GetPlacesRepository.getInstance(GetPlacesRemoteDataSource.getInstance()), this);
 
-        final LocationManager manager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-
-        if (!manager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
-            buildAlertMessageNoGps();
-        } else {
-            checkLastMode();
-        }
         appMode.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -71,7 +96,6 @@ public class MainActivity extends AppCompatActivity implements GetPlacesPresente
             }
 
         });
-
     }
 
     private void switchAppMode(String appModeString) {
@@ -106,14 +130,32 @@ public class MainActivity extends AppCompatActivity implements GetPlacesPresente
     @Override
     protected void onResume() {
         super.onResume();
-        final LocationManager manager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-        if (!manager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
-            buildAlertMessageNoGps();
-        } else {
-            checkLastMode();
+        if(locationAccess == 1) {
+            final LocationManager manager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+            if (!manager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+                buildAlertMessageNoGps();
+            } else {
+                checkLastMode();
+            }
         }
     }
 
+    private void getLocationPermission() {
+        String[] permissions = {Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION};
+
+        if (ContextCompat.checkSelfPermission(this.getApplicationContext(), FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+            if (ContextCompat.checkSelfPermission(this.getApplicationContext(), COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+
+                mLocationPermissionGranted = true;
+                ActivityCompat.requestPermissions(this, permissions, LOCATION_PERMISSION_REQUEST_CODE);
+
+            } else {
+                ActivityCompat.requestPermissions(this, permissions, LOCATION_PERMISSION_REQUEST_CODE);
+            }
+        } else {
+            ActivityCompat.requestPermissions(this, permissions, LOCATION_PERMISSION_REQUEST_CODE);
+        }
+    }
     private void buildAlertMessageNoGps() {
         final AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setMessage(getString(R.string.enable_gps))
@@ -121,6 +163,7 @@ public class MainActivity extends AppCompatActivity implements GetPlacesPresente
                 .setPositiveButton(R.string.yes, new DialogInterface.OnClickListener() {
                     public void onClick(@SuppressWarnings("unused") final DialogInterface dialog, @SuppressWarnings("unused") final int id) {
                         startActivity(new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS));
+                        locationAccess = 1;
                     }
                 })
                 .setNegativeButton(R.string.no, new DialogInterface.OnClickListener() {
