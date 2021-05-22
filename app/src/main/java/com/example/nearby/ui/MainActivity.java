@@ -1,6 +1,7 @@
 package com.example.nearby.ui;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.os.Bundle;
@@ -27,6 +28,7 @@ public class MainActivity extends AppCompatActivity implements GetPlacesPresente
     private List<VenuesItem> venuesItems;
 
     private RecyclerView recyclerView;
+    private ConstraintLayout constraintLayoutNoPlaces, constraintLayoutError;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -34,7 +36,11 @@ public class MainActivity extends AppCompatActivity implements GetPlacesPresente
         setContentView(R.layout.activity_main);
 
         spinnerDialog = new SpinnerDialog(this);
+
         recyclerView = findViewById(R.id.venues_recyclerview);
+        constraintLayoutNoPlaces = findViewById(R.id.no_places_constraint);
+        constraintLayoutError = findViewById(R.id.error_constraint);
+
         venuesItems = new ArrayList<>();
 
         getPlacesPresenter = new GetPlacesPresenter(this,
@@ -70,11 +76,14 @@ public class MainActivity extends AppCompatActivity implements GetPlacesPresente
             getPlacesPresenter.setUpVenuesList(venuesItems);
         }else {
             recyclerView.setVisibility(View.GONE);
+            constraintLayoutNoPlaces.setVisibility(View.VISIBLE);
         }
     }
 
     @Override
     public void onGetPlacesFail(String message) {
+        recyclerView.setVisibility(View.GONE);
+        constraintLayoutError.setVisibility(View.VISIBLE);
         Toast.makeText(this, "Fail", Toast.LENGTH_SHORT).show();
     }
 
