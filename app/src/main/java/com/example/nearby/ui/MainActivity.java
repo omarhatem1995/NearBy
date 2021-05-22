@@ -1,10 +1,17 @@
 package com.example.nearby.ui;
 
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.content.Context;
+import android.content.DialogInterface;
+import android.content.Intent;
+import android.location.LocationManager;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
 
@@ -46,15 +53,49 @@ public class MainActivity extends AppCompatActivity implements GetPlacesPresente
         getPlacesPresenter = new GetPlacesPresenter(this,
                 GetPlacesRepository.getInstance(GetPlacesRemoteDataSource.getInstance()), this);
 
-        getPlacesPresenter.getLastKnownLoccation();
+        final LocationManager manager = (LocationManager) getSystemService( Context.LOCATION_SERVICE );
 
+        if ( !manager.isProviderEnabled( LocationManager.GPS_PROVIDER ) ) {
+            buildAlertMessageNoGps();
+        }else {
+            getPlacesPresenter.getLastKnownLoccation();
+        }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        final LocationManager manager = (LocationManager) getSystemService( Context.LOCATION_SERVICE );
+        if ( !manager.isProviderEnabled( LocationManager.GPS_PROVIDER ) ) {
+            buildAlertMessageNoGps();
+        }else {
+            getPlacesPresenter.getLastKnownLoccation();
+        }
     }
 
     public void realTimeUpdate() {
         getPlacesPresenter.getLastKnownLoccation();
     }
 
-
+    private void buildAlertMessageNoGps() {
+        final AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setMessage("Your GPS seems to be disabled, do you want to enable it?")
+                .setCancelable(false)
+                .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                    public void onClick(@SuppressWarnings("unused") final DialogInterface dialog, @SuppressWarnings("unused") final int id) {
+                        startActivity(new Intent(android.provider.Settings.ACTION_LOCATION_SOURCE_SETTINGS));
+                    }
+                })
+                .setNegativeButton("No", new DialogInterface.OnClickListener() {
+                    public void onClick(final DialogInterface dialog, @SuppressWarnings("unused") final int id) {
+                        recyclerView.setVisibility(View.GONE);
+                        constraintLayoutNoPlaces.setVisibility(View.VISIBLE);
+                        dialog.cancel();
+                    }
+                });
+        final AlertDialog alert = builder.create();
+        alert.show();
+    }
     @Override
     public void onGetPlacesSuccess(FoursquareResponseModel foursquareResponseModel) {
         Toast.makeText(this, foursquareResponseModel.getResponse()
