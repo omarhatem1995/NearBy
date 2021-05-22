@@ -1,6 +1,5 @@
 package com.example.nearby.ui;
 
-import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.ConstraintLayout;
@@ -11,9 +10,9 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.location.LocationManager;
 import android.os.Bundle;
-import android.util.Log;
+import android.provider.Settings;
 import android.view.View;
-import android.widget.Toast;
+import android.widget.TextView;
 
 import com.example.nearby.R;
 import com.example.nearby.model.FoursquareModel.FoursquareResponseModel;
@@ -22,6 +21,8 @@ import com.example.nearby.presenter.GetPlacesPresenter.GetPlacesPresenter;
 import com.example.nearby.presenter.GetPlacesPresenter.GetPlacesPresenterListener;
 import com.example.nearby.repo.FoursquareRepository.GetPlacesRemoteDataSource;
 import com.example.nearby.repo.FoursquareRepository.GetPlacesRepository;
+import com.example.nearby.utils.Constants;
+import com.example.nearby.utils.GlobalSharedPreference;
 import com.example.nearby.utils.SpinnerDialog;
 
 import java.util.ArrayList;
@@ -34,6 +35,7 @@ public class MainActivity extends AppCompatActivity implements GetPlacesPresente
 
     private List<VenuesItem> venuesItems;
 
+    private TextView appMode;
     private RecyclerView recyclerView;
     private ConstraintLayout constraintLayoutNoPlaces, constraintLayoutError;
 
@@ -44,6 +46,7 @@ public class MainActivity extends AppCompatActivity implements GetPlacesPresente
 
         spinnerDialog = new SpinnerDialog(this);
 
+        appMode = findViewById(R.id.app_mode);
         recyclerView = findViewById(R.id.venues_recyclerview);
         constraintLayoutNoPlaces = findViewById(R.id.no_places_constraint);
         constraintLayoutError = findViewById(R.id.error_constraint);
@@ -53,40 +56,70 @@ public class MainActivity extends AppCompatActivity implements GetPlacesPresente
         getPlacesPresenter = new GetPlacesPresenter(this,
                 GetPlacesRepository.getInstance(GetPlacesRemoteDataSource.getInstance()), this);
 
-        final LocationManager manager = (LocationManager) getSystemService( Context.LOCATION_SERVICE );
+        final LocationManager manager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
 
-        if ( !manager.isProviderEnabled( LocationManager.GPS_PROVIDER ) ) {
+        if (!manager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
             buildAlertMessageNoGps();
-        }else {
-            getPlacesPresenter.getLastKnownLoccation();
+        } else {
+            checkLastMode();
+        }
+        appMode.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                switchAppMode(appMode.getText().toString());
+            }
+
+        });
+
+    }
+
+    private void switchAppMode(String appModeString) {
+        if (appModeString.equals(getString(R.string.realtime))) {
+            GlobalSharedPreference.getInstance().setSavedString(this,
+                    Constants.APPMODE, getString(R.string.singleupdate));
+            appMode.setText(R.string.singleupdate);
+            getPlacesPresenter.getLastKnownLocationRealTime();
+        } else if (appModeString.equals(R.string.singleupdate)) {
+            GlobalSharedPreference.getInstance().setSavedString(this,
+                    Constants.APPMODE, getString(R.string.realtime));
+            appMode.setText(R.string.realtime);
+            getPlacesPresenter.getLastKnownLocationSingleUpdate();
+        }
+
+    }
+
+
+    private void checkLastMode() {
+        if (GlobalSharedPreference.getInstance().getSavedString(this, Constants.APPMODE).equals(getString(R.string.singleupdate))) {
+            getPlacesPresenter.getLastKnownLocationSingleUpdate();
+            switchAppMode(appMode.getText().toString());
+        } else {
+            getPlacesPresenter.getLastKnownLocationRealTime();
+            switchAppMode(appMode.getText().toString());
         }
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        final LocationManager manager = (LocationManager) getSystemService( Context.LOCATION_SERVICE );
-        if ( !manager.isProviderEnabled( LocationManager.GPS_PROVIDER ) ) {
+        final LocationManager manager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+        if (!manager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
             buildAlertMessageNoGps();
-        }else {
-            getPlacesPresenter.getLastKnownLoccation();
+        } else {
+            checkLastMode();
         }
-    }
-
-    public void realTimeUpdate() {
-        getPlacesPresenter.getLastKnownLoccation();
     }
 
     private void buildAlertMessageNoGps() {
         final AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setMessage("Your GPS seems to be disabled, do you want to enable it?")
+        builder.setMessage(getString(R.string.enable_gps))
                 .setCancelable(false)
-                .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                .setPositiveButton(R.string.yes, new DialogInterface.OnClickListener() {
                     public void onClick(@SuppressWarnings("unused") final DialogInterface dialog, @SuppressWarnings("unused") final int id) {
-                        startActivity(new Intent(android.provider.Settings.ACTION_LOCATION_SOURCE_SETTINGS));
+                        startActivity(new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS));
                     }
                 })
-                .setNegativeButton("No", new DialogInterface.OnClickListener() {
+                .setNegativeButton(R.string.no, new DialogInterface.OnClickListener() {
                     public void onClick(final DialogInterface dialog, @SuppressWarnings("unused") final int id) {
                         recyclerView.setVisibility(View.GONE);
                         constraintLayoutNoPlaces.setVisibility(View.VISIBLE);
@@ -96,10 +129,11 @@ public class MainActivity extends AppCompatActivity implements GetPlacesPresente
         final AlertDialog alert = builder.create();
         alert.show();
     }
+
     @Override
     public void onGetPlacesSuccess(FoursquareResponseModel foursquareResponseModel) {
 
-        if(foursquareResponseModel.getResponse().getVenues().size()!=0) {
+        if (foursquareResponseModel.getResponse().getVenues().size() != 0) {
             for (int i = 0; i < foursquareResponseModel.getResponse()
                     .getVenues().size(); i++) {
                 VenuesItem venuesItem = new VenuesItem();
@@ -113,7 +147,7 @@ public class MainActivity extends AppCompatActivity implements GetPlacesPresente
 
             }
             getPlacesPresenter.setUpVenuesList(venuesItems);
-        }else {
+        } else {
             recyclerView.setVisibility(View.GONE);
             constraintLayoutNoPlaces.setVisibility(View.VISIBLE);
         }

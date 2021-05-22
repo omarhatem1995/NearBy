@@ -37,7 +37,7 @@ public class GetPlacesPresenter {
     private LocationCallback locationCallback;
     private FusedLocationProviderClient fusedLocationClient;
 
-    private static final long SMALLEST_DISPLACEMENT = 1000;
+    private static final long SMALLEST_DISPLACEMENT = 500;
 
     int firstTime = 0;
 
@@ -75,7 +75,7 @@ public class GetPlacesPresenter {
         });
     }
 
-    public void getLastKnownLoccation() {
+    public void getLastKnownLocationRealTime() {
         locationRequest = LocationRequest.create();
         locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
 //        locationRequest.setInterval(20 * 1000);
@@ -95,7 +95,59 @@ public class GetPlacesPresenter {
 
                         Log.d("lastKnown ", "locationResult" + wayLatitude + " , " + wayLongitude);
                             if(firstTime != 1){
-                                getLastKnownLoccation();
+                                getLastKnownLocationRealTime();
+                            }
+                        firstTime = 1;
+                    }
+                }
+            }
+        };
+        if (ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            // TODO: Consider calling
+            //    ActivityCompat#requestPermissions
+            // here to request the missing permissions, and then overriding
+            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+            //                                          int[] grantResults)
+            // to handle the case where the user grants the permission. See the documentation
+            // for ActivityCompat#requestPermissions for more details.
+            return;
+        }
+        fusedLocationClient.requestLocationUpdates(locationRequest, locationCallback, Looper.getMainLooper());
+
+        Log.d("lastKnown", " is called");
+        fusedLocationClient.getLastLocation()
+                .addOnSuccessListener(new OnSuccessListener<Location>() {
+                    @Override
+                    public void onSuccess(Location location) {
+                        if (location != null) {
+                            Log.d("lastKnown", " is success" + location.getLongitude());
+                            String latLong = location.getLatitude() + "," + location.getLongitude();
+                            getPlaces(latLong);
+
+                        } else {
+                            Log.d("lastKnown", " is success" + "location.getLongitude()");
+
+                        }
+                    }
+                });
+    }
+    public void getLastKnownLocationSingleUpdate() {
+        locationRequest = LocationRequest.create();
+        locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+        locationCallback = new LocationCallback() {
+            @Override
+            public void onLocationResult(LocationResult locationResult) {
+                if (locationResult == null) {
+                    return;
+                }
+                for (Location location : locationResult.getLocations()) {
+                    if (location != null) {
+                        double wayLatitude = location.getLatitude();
+                        double wayLongitude = location.getLongitude();
+
+                        Log.d("lastKnown ", "locationResult" + wayLatitude + " , " + wayLongitude);
+                            if(firstTime != 1){
+                                getLastKnownLocationRealTime();
                             }
                         firstTime = 1;
                     }

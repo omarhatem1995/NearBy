@@ -1,3 +1,8 @@
 <resources>
     <string name="app_name">NearBy</string>
+    <string name="realtime">RealTime</string>
+    <string name="singleupdate">SingleUpdate</string>
+    <string name="enable_gps">Your GPS seems to be disabled, do you want to enable it?</string>
+    <string name="yes">Yes</string>
+    <string name="no">No</string>
 </resources>
