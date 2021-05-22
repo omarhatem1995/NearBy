@@ -21,7 +21,8 @@ public interface Apis {
     Call<FoursquareResponseModel> getPlaces(@Query("client_id") String clientID,
                                             @Query("client_secret") String clientSecret,
                                             @Query("near") String ll,
-                                            @Query("v") String version);
+                                            @Query("v") String version,
+                                            @Query("radius") int radius);
 
     @GET("v2/venues/{VENUE_ID}")
     Call<FoursquarePlaceDetailsResponseModel> getPlacesDetails(@Path("VENUE_ID") String venueID,
