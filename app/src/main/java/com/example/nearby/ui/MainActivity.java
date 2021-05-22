@@ -11,6 +11,7 @@ import android.content.Intent;
 import android.location.LocationManager;
 import android.os.Bundle;
 import android.provider.Settings;
+import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
 
@@ -74,12 +75,15 @@ public class MainActivity extends AppCompatActivity implements GetPlacesPresente
     }
 
     private void switchAppMode(String appModeString) {
+        Log.d("isClicked" , "is called" + appModeString + "," + getString(R.string.singleupdate));
         if (appModeString.equals(getString(R.string.realtime))) {
             GlobalSharedPreference.getInstance().setSavedString(this,
                     Constants.APPMODE, getString(R.string.singleupdate));
             appMode.setText(R.string.singleupdate);
             getPlacesPresenter.getLastKnownLocationRealTime();
-        } else if (appModeString.equals(R.string.singleupdate)) {
+        } else if (appModeString.equals(getString(R.string.singleupdate))) {
+            Log.d("isClicked" , "is entered " + appModeString);
+
             GlobalSharedPreference.getInstance().setSavedString(this,
                     Constants.APPMODE, getString(R.string.realtime));
             appMode.setText(R.string.realtime);
