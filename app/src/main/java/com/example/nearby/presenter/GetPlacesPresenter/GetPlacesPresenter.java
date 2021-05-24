@@ -75,10 +75,14 @@ public class GetPlacesPresenter {
         });
     }
 
+
+    /*
+     * Function that is used for realTime Updates
+     * */
     public void getLastKnownLocationRealTime() {
+        Log.d("RealTime" ,  " is called");
         locationRequest = LocationRequest.create();
         locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-//        locationRequest.setInterval(20 * 1000);
         locationRequest.setInterval(0);
         locationRequest.setFastestInterval(0);
         locationRequest.setSmallestDisplacement(SMALLEST_DISPLACEMENT);
@@ -94,10 +98,6 @@ public class GetPlacesPresenter {
                         double wayLongitude = location.getLongitude();
 
                         Log.d("lastKnown ", "locationResult" + wayLatitude + " , " + wayLongitude);
-                            if(firstTime != 1){
-                                getLastKnownLocationRealTime();
-                            }
-                        firstTime = 1;
                     }
                 }
             }
@@ -114,23 +114,24 @@ public class GetPlacesPresenter {
         }
         fusedLocationClient.requestLocationUpdates(locationRequest, locationCallback, Looper.getMainLooper());
 
-        Log.d("lastKnown", " is called");
         fusedLocationClient.getLastLocation()
                 .addOnSuccessListener(new OnSuccessListener<Location>() {
                     @Override
                     public void onSuccess(Location location) {
                         if (location != null) {
-                            Log.d("lastKnown", " is success" + location.getLongitude());
                             String latLong = location.getLatitude() + "," + location.getLongitude();
                             getPlaces(latLong);
 
                         } else {
-                            Log.d("lastKnown", " is success" + "location.getLongitude()");
 
                         }
                     }
                 });
     }
+
+    /*
+     * Function that is used for SingleUpdate
+     * */
     public void getLastKnownLocationSingleUpdate() {
         locationRequest = LocationRequest.create();
         locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
@@ -146,10 +147,6 @@ public class GetPlacesPresenter {
                         double wayLongitude = location.getLongitude();
 
                         Log.d("lastKnown ", "locationResult" + wayLatitude + " , " + wayLongitude);
-                            if(firstTime != 1){
-                                getLastKnownLocationRealTime();
-                            }
-                        firstTime = 1;
                     }
                 }
             }
@@ -166,18 +163,15 @@ public class GetPlacesPresenter {
         }
         fusedLocationClient.requestLocationUpdates(locationRequest, locationCallback, Looper.getMainLooper());
 
-        Log.d("lastKnown", " is called");
         fusedLocationClient.getLastLocation()
                 .addOnSuccessListener(new OnSuccessListener<Location>() {
                     @Override
                     public void onSuccess(Location location) {
                         if (location != null) {
-                            Log.d("lastKnown", " is success" + location.getLongitude());
                             String latLong = location.getLatitude() + "," + location.getLongitude();
                             getPlaces(latLong);
 
                         } else {
-                            Log.d("lastKnown", " is success" + "location.getLongitude()");
 
                         }
                     }

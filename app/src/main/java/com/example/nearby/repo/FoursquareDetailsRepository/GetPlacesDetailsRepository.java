@@ -1,6 +1,7 @@
 package com.example.nearby.repo.FoursquareDetailsRepository;
 
 
+import com.example.nearby.model.FoursquareImageModel.FoursquareImageResponseModel;
 import com.example.nearby.model.FoursquarePlaceDetailsModel.FoursquarePlaceDetailsResponseModel;
 
 public class GetPlacesDetailsRepository implements GetPlacesDetailsDataSource {
@@ -23,7 +24,7 @@ public class GetPlacesDetailsRepository implements GetPlacesDetailsDataSource {
     public void GetPlacesDetailsDataSource(String venueId, GetPlacesDetailsDataSource.getPlacesDetailsDataSource callback) {
         getPlacesDetailsDataSource.GetPlacesDetailsDataSource(venueId, new getPlacesDetailsDataSource() {
             @Override
-            public void onGetPlacesDetailsDataSourceSuccess(FoursquarePlaceDetailsResponseModel foursquarePlaceDetailsResponseModel) {
+            public void onGetPlacesDetailsDataSourceSuccess(FoursquareImageResponseModel foursquarePlaceDetailsResponseModel) {
                 callback.onGetPlacesDetailsDataSourceSuccess(foursquarePlaceDetailsResponseModel);
             }
 

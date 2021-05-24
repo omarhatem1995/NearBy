@@ -1,6 +1,7 @@
 package com.example.nearby.network;
 
 
+import com.example.nearby.model.FoursquareImageModel.FoursquareImageResponseModel;
 import com.example.nearby.model.FoursquareModel.FoursquareResponseModel;
 import com.example.nearby.model.FoursquarePlaceDetailsModel.FoursquarePlaceDetailsResponseModel;
 
@@ -24,10 +25,10 @@ public interface Apis {
                                             @Query("v") String version,
                                             @Query("radius") int radius);
 
-    @GET("v2/venues/{VENUE_ID}")
-    Call<FoursquarePlaceDetailsResponseModel> getPlacesDetails(@Path("VENUE_ID") String venueID,
-                                                               @Query("client_id") String clientID,
-                                                               @Query("client_secret") String clientSecret,
-                                                               @Query("v") String version);
+    @GET("v2/venues/{VENUE_ID}/photos")
+    Call<FoursquareImageResponseModel> getPlacesDetails(@Path("VENUE_ID") String venueID,
+                                                        @Query("client_id") String clientID,
+                                                        @Query("client_secret") String clientSecret,
+                                                        @Query("v") String version);
 
 }

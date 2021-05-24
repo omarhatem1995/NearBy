@@ -1,5 +1,6 @@
 package com.example.nearby.repo.FoursquareDetailsRepository;
 
+import com.example.nearby.model.FoursquareImageModel.FoursquareImageResponseModel;
 import com.example.nearby.model.FoursquarePlaceDetailsModel.FoursquarePlaceDetailsResponseModel;
 import com.example.nearby.network.RetrofitCallBack;
 import com.example.nearby.network.WebServices;
@@ -22,9 +23,9 @@ public class GetPlacesDetailsRemoteDataSource implements GetPlacesDetailsDataSou
 
     @Override
     public void GetPlacesDetailsDataSource(String venueId, GetPlacesDetailsDataSource.getPlacesDetailsDataSource callback) {
-        WebServices.getApis().getPlacesDetails(venueId,CLIENT_ID,CLIENT_SECRET, VERSION).enqueue(new RetrofitCallBack<FoursquarePlaceDetailsResponseModel>() {
+        WebServices.getApis().getPlacesDetails(venueId,CLIENT_ID,CLIENT_SECRET, VERSION).enqueue(new RetrofitCallBack<FoursquareImageResponseModel>() {
             @Override
-            public void onResponse(Call<FoursquarePlaceDetailsResponseModel> call, Response<FoursquarePlaceDetailsResponseModel> response) {
+            public void onResponse(Call<FoursquareImageResponseModel> call, Response<FoursquareImageResponseModel> response) {
                 super.onResponse(call, response);
                 if(response.body()!=null){
                     callback.onGetPlacesDetailsDataSourceSuccess(response.body());
@@ -34,7 +35,7 @@ public class GetPlacesDetailsRemoteDataSource implements GetPlacesDetailsDataSou
             }
 
             @Override
-            public void onFailure(Call<FoursquarePlaceDetailsResponseModel> call, Throwable t) {
+            public void onFailure(Call<FoursquareImageResponseModel> call, Throwable t) {
                 super.onFailure(call, t);
                 callback.onGetPlacesDetailsDataSourceFail(t.getMessage());
             }

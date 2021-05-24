@@ -10,6 +10,7 @@ import android.util.Log;
 
 import com.example.nearby.R;
 import com.example.nearby.adapter.MainAdapter;
+import com.example.nearby.model.FoursquareImageModel.FoursquareImageResponseModel;
 import com.example.nearby.model.FoursquareModel.FoursquareResponseModel;
 import com.example.nearby.model.FoursquareModel.VenuesItem;
 import com.example.nearby.model.FoursquarePlaceDetailsModel.FoursquarePlaceDetailsResponseModel;
@@ -37,14 +38,6 @@ public class GetPlacesDetailsPresenter {
     private GetPlacesDetailsPresenterListener getPlacesDetailsPresenterListener;
     private Context context;
 
-    private LocationRequest locationRequest;
-    private LocationCallback locationCallback;
-    private FusedLocationProviderClient fusedLocationClient;
-
-
-    private MainAdapter mainAdapter;
-    private RecyclerView recyclerView;
-
     public GetPlacesDetailsPresenter(GetPlacesDetailsPresenterListener getPlacesDetailsPresenterListener,
                                      GetPlacesDetailsRepository getPlacesDetailsRepository) {
         this.getPlacesDetailsPresenterListener = getPlacesDetailsPresenterListener;
@@ -55,20 +48,17 @@ public class GetPlacesDetailsPresenter {
 
     public void getPlaces(String venueId) {
 
-//        getPlacesDetailsPresenterListener.showProgress();
         getPlacesDetailsRepository.GetPlacesDetailsDataSource(venueId, new GetPlacesDetailsDataSource.getPlacesDetailsDataSource() {
 
 
             @Override
-            public void onGetPlacesDetailsDataSourceSuccess(FoursquarePlaceDetailsResponseModel foursquarePlaceDetailsResponseModel) {
-//                getPlacesPresenterListener.hideProgress();
+            public void onGetPlacesDetailsDataSourceSuccess(FoursquareImageResponseModel foursquarePlaceDetailsResponseModel) {
                 getPlacesDetailsPresenterListener.onGetPlacesDetailsSuccess(foursquarePlaceDetailsResponseModel);
 
             }
 
             @Override
             public void onGetPlacesDetailsDataSourceFail(String message) {
-//                getPlacesPresenterListener.hideProgress();
                 getPlacesDetailsPresenterListener.onGetPlacesDetailsFail(message);
             }
         });

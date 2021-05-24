@@ -14,16 +14,22 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.LocationManager;
 import android.os.Bundle;
+import android.os.Handler;
 import android.provider.Settings;
 import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
 
 import com.example.nearby.R;
+import com.example.nearby.model.FoursquareImageModel.FoursquareImageResponseModel;
 import com.example.nearby.model.FoursquareModel.FoursquareResponseModel;
 import com.example.nearby.model.FoursquareModel.VenuesItem;
+import com.example.nearby.presenter.GetPlacesDetailsPresenter.GetPlacesDetailsPresenter;
+import com.example.nearby.presenter.GetPlacesDetailsPresenter.GetPlacesDetailsPresenterListener;
 import com.example.nearby.presenter.GetPlacesPresenter.GetPlacesPresenter;
 import com.example.nearby.presenter.GetPlacesPresenter.GetPlacesPresenterListener;
+import com.example.nearby.repo.FoursquareDetailsRepository.GetPlacesDetailsRemoteDataSource;
+import com.example.nearby.repo.FoursquareDetailsRepository.GetPlacesDetailsRepository;
 import com.example.nearby.repo.FoursquareRepository.GetPlacesRemoteDataSource;
 import com.example.nearby.repo.FoursquareRepository.GetPlacesRepository;
 import com.example.nearby.utils.Constants;
@@ -33,7 +39,8 @@ import com.example.nearby.utils.SpinnerDialog;
 import java.util.ArrayList;
 import java.util.List;
 
-public class MainActivity extends AppCompatActivity implements GetPlacesPresenterListener {
+public class MainActivity extends AppCompatActivity implements GetPlacesPresenterListener,
+        GetPlacesDetailsPresenterListener {
 
     private SpinnerDialog spinnerDialog;
     private GetPlacesPresenter getPlacesPresenter;
@@ -44,8 +51,9 @@ public class MainActivity extends AppCompatActivity implements GetPlacesPresente
     private RecyclerView recyclerView;
     private ConstraintLayout constraintLayoutNoPlaces, constraintLayoutError;
 
-    private int locationAccess = 0;
 
+    //Variables to set Location Permissions
+    private int locationAccess = 0;
     private Boolean mLocationPermissionGranted = false;
     private static final String FINE_LOCATION = Manifest.permission.ACCESS_FINE_LOCATION;
     private static final String COARSE_LOCATION = Manifest.permission.ACCESS_COARSE_LOCATION;
@@ -68,12 +76,16 @@ public class MainActivity extends AppCompatActivity implements GetPlacesPresente
             } else {
                 checkLastMode();
             }
-        }else {
+        } else {
             getLocationPermission();
         }
 
     }
 
+
+    /*
+     * Function that initializes the views of the main activity
+     * */
     private void initViews() {
         appMode = findViewById(R.id.app_mode);
         recyclerView = findViewById(R.id.venues_recyclerview);
@@ -96,15 +108,18 @@ public class MainActivity extends AppCompatActivity implements GetPlacesPresente
         });
     }
 
+
+    /*
+     * Function that switches the mode from realtime to singleupdate and vice versa
+     * */
     private void switchAppMode(String appModeString) {
-        Log.d("isClicked" , "is called" + appModeString + "," + getString(R.string.singleupdate));
+        venuesItems = new ArrayList<>();
         if (appModeString.equals(getString(R.string.realtime))) {
             GlobalSharedPreference.getInstance().setSavedString(this,
                     Constants.APPMODE, getString(R.string.singleupdate));
             appMode.setText(R.string.singleupdate);
             getPlacesPresenter.getLastKnownLocationRealTime();
         } else if (appModeString.equals(getString(R.string.singleupdate))) {
-            Log.d("isClicked" , "is entered " + appModeString);
 
             GlobalSharedPreference.getInstance().setSavedString(this,
                     Constants.APPMODE, getString(R.string.realtime));
@@ -115,20 +130,26 @@ public class MainActivity extends AppCompatActivity implements GetPlacesPresente
     }
 
 
+    /*
+     * Function that checks the mode from the shared pref to restore it
+     * */
     private void checkLastMode() {
+        Log.d("CheckLast", " is called");
         if (GlobalSharedPreference.getInstance().getSavedString(this, Constants.APPMODE).equals(getString(R.string.singleupdate))) {
             getPlacesPresenter.getLastKnownLocationSingleUpdate();
-            switchAppMode(appMode.getText().toString());
+//            switchAppMode(appMode.getText().toString());
+            appMode.setText(R.string.singleupdate);
         } else {
             getPlacesPresenter.getLastKnownLocationRealTime();
-            switchAppMode(appMode.getText().toString());
+//            switchAppMode(appMode.getText().toString());
+            appMode.setText(R.string.realtime);
         }
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        if(locationAccess == 1) {
+        if (locationAccess == 1) {
             final LocationManager manager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
             if (!manager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
                 buildAlertMessageNoGps();
@@ -138,6 +159,10 @@ public class MainActivity extends AppCompatActivity implements GetPlacesPresente
         }
     }
 
+
+    /*
+     * Function that gets the location Permissions
+     * */
     private void getLocationPermission() {
         String[] permissions = {Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION};
 
@@ -154,6 +179,7 @@ public class MainActivity extends AppCompatActivity implements GetPlacesPresente
             ActivityCompat.requestPermissions(this, permissions, LOCATION_PERMISSION_REQUEST_CODE);
         }
     }
+
     private void buildAlertMessageNoGps() {
         final AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setMessage(getString(R.string.enable_gps))
@@ -175,8 +201,13 @@ public class MainActivity extends AppCompatActivity implements GetPlacesPresente
         alert.show();
     }
 
+    private GetPlacesDetailsPresenter getPlacesDetailsPresenter;
+
+    //Passing the foursquareResponseModel items to the adapter to set them
     @Override
     public void onGetPlacesSuccess(FoursquareResponseModel foursquareResponseModel) {
+        getPlacesDetailsPresenter = new GetPlacesDetailsPresenter(this,
+                GetPlacesDetailsRepository.getInstance(GetPlacesDetailsRemoteDataSource.getInstance()));
 
         if (foursquareResponseModel.getResponse().getVenues().size() != 0) {
             for (int i = 0; i < foursquareResponseModel.getResponse()
@@ -192,6 +223,10 @@ public class MainActivity extends AppCompatActivity implements GetPlacesPresente
 
             }
             getPlacesPresenter.setUpVenuesList(venuesItems);
+            Log.d("logcata ", 0 + ".getResponse()");
+            if (venuesItems.size() != 0)
+                getPlacesDetailsPresenter.getPlaces(venuesItems.get(0).getId());
+
         } else {
             recyclerView.setVisibility(View.GONE);
             constraintLayoutNoPlaces.setVisibility(View.VISIBLE);
@@ -202,6 +237,31 @@ public class MainActivity extends AppCompatActivity implements GetPlacesPresente
     public void onGetPlacesFail(String message) {
         recyclerView.setVisibility(View.GONE);
         constraintLayoutError.setVisibility(View.VISIBLE);
+    }
+
+    int counter = 1;
+    private void getItems(int venuesListSize){
+        Log.d("counterID", " counter "+ counter + " venues " +venuesListSize);
+
+        if(counter != venuesListSize && counter > venuesListSize){
+            getPlacesDetailsPresenter.getPlaces(venuesItems.get(counter).getId());
+            Log.d("counterID", " counter "+ counter);
+            counter =+ 1;
+        }
+    }
+
+    @Override
+    public void onGetPlacesDetailsSuccess(FoursquareImageResponseModel foursquarePlaceDetailsResponseModel) {
+        if (foursquarePlaceDetailsResponseModel.getResponse().getPhotos().getCount() != 0)
+            Log.d("logcata ", foursquarePlaceDetailsResponseModel.getResponse()
+                    .getPhotos().getItems().get(0).getPrefix());
+        getItems(venuesItems.size());
+
+    }
+
+    @Override
+    public void onGetPlacesDetailsFail(String message) {
+        Log.d("counterID",  " fail " + message);
     }
 
     @Override

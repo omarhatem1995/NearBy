@@ -11,6 +11,7 @@ import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
 import com.example.nearby.R;
+import com.example.nearby.model.FoursquareImageModel.FoursquareImageResponseModel;
 import com.example.nearby.model.FoursquareModel.VenuesItem;
 import com.example.nearby.model.FoursquarePlaceDetailsModel.FoursquarePlaceDetailsResponseModel;
 import com.example.nearby.presenter.GetPlacesDetailsPresenter.GetPlacesDetailsPresenter;
@@ -29,6 +30,8 @@ public class MainAdapter extends RecyclerView.Adapter<MainAdapter.MainAdapterVie
     private final Context context;
     private List<VenuesItem> venuesItemList;
     private int targetPos = 0;
+    private ImageView s;
+    private String url ;
 
     private GetPlacesDetailsPresenter getPlacesDetailsPresenter;
 
@@ -37,8 +40,11 @@ public class MainAdapter extends RecyclerView.Adapter<MainAdapter.MainAdapterVie
         this.venuesItemList = venuesItems;
         getPlacesDetailsPresenter = new GetPlacesDetailsPresenter(this,
                 GetPlacesDetailsRepository.getInstance(GetPlacesDetailsRemoteDataSource.getInstance()));
-        getPlacesDetailsPresenter.getPlaces("51d7f8408bbdd659aa6a057a");
 
+        getPlacesDetailsPresenter.getPlaces(venuesItemList.get(0).
+                getId());
+        Log.d("targetId", " loool " + venuesItemList.get(0).
+                getId());
     }
 
     @NonNull
@@ -50,7 +56,6 @@ public class MainAdapter extends RecyclerView.Adapter<MainAdapter.MainAdapterVie
 
         return viewHolder;
     }
-    ImageView s;
     @Override
     public void onBindViewHolder(@NonNull MainAdapterViewHolder holder, int position) {
         String placeName = venuesItemList.get(position).getName();
@@ -58,14 +63,10 @@ public class MainAdapter extends RecyclerView.Adapter<MainAdapter.MainAdapterVie
             String placeAddress = venuesItemList.get(position).getLocation().getAddress();
             holder.itemAddress.setText(placeAddress);
             targetPos = position;
+//            getPlacesDetailsPresenter.getPlaces(venuesItemList.get(position).
+//                    getId());
         }
         s = holder.itemImage;
-
-        Log.d("venuID is ",venuesItemList.get(position).getName() + " is value");
-        Log.d("venuID is ",venuesItemList.get(position).getReferralId() + " is value");
-        Log.d("venuID is ",venuesItemList.get(position).getCategories() + " is value");
-        Log.d("venuID is ",venuesItemList.get(position).getLocation() + " is value");
-        Log.d("venuID is ",venuesItemList.get(position).getVenuePage() + " is value");
         holder.itemName.setText(placeName);
     }
 
@@ -77,18 +78,17 @@ public class MainAdapter extends RecyclerView.Adapter<MainAdapter.MainAdapterVie
             return 0;
         }
     }
-    String url ;
     @Override
-    public void onGetPlacesDetailsSuccess(FoursquarePlaceDetailsResponseModel foursquarePlaceDetailsResponseModel) {
-//        Glide.with(context).load().into(holder.itemImage);
-        if(foursquarePlaceDetailsResponseModel.getResponse().getVenue().getBestPhoto()!=null) {
-//            Log.d("targetId",  + " is there");
-/*            url = foursquarePlaceDetailsResponseModel.getResponse()
-                    .getVenue().getBestPhoto().getPrefix() + "" + foursquarePlaceDetailsResponseModel.getResponse()
-                    .getVenue().getBestPhoto().getWidth() + "x" + foursquarePlaceDetailsResponseModel.getResponse()
-                    .getVenue().getBestPhoto().getHeight() + "" + foursquarePlaceDetailsResponseModel.getResponse()
-                    .getVenue().getBestPhoto().getSuffix();
-            Glide.with(context).load(url).into(s);*/
+    public void onGetPlacesDetailsSuccess(FoursquareImageResponseModel foursquarePlaceDetailsResponseModel) {
+        if(foursquarePlaceDetailsResponseModel.getResponse().getPhotos().getItems()!=null
+        && !foursquarePlaceDetailsResponseModel.getResponse().getPhotos().getItems().isEmpty()) {
+            url = foursquarePlaceDetailsResponseModel.getResponse()
+                    .getPhotos().getItems().get(0).getPrefix() + "" + foursquarePlaceDetailsResponseModel.getResponse()
+                    .getPhotos().getItems().get(0).getWidth() + "x" + foursquarePlaceDetailsResponseModel.getResponse()
+                    .getPhotos().getItems().get(0).getHeight() + "" + foursquarePlaceDetailsResponseModel.getResponse()
+                    .getPhotos().getItems().get(0).getSuffix();
+//            Glide.with(context).load(url).into(s);
+            Log.d("targetId", " is " + url + " target post" + targetPos);
 
         }        else {
             Log.d("targetId", " is null");
@@ -97,7 +97,7 @@ public class MainAdapter extends RecyclerView.Adapter<MainAdapter.MainAdapterVie
 
     @Override
     public void onGetPlacesDetailsFail(String message) {
-        Toast.makeText(context, " FAIl", Toast.LENGTH_SHORT).show();
+        Log.d("targetId", " is null");
     }
 
     @Override

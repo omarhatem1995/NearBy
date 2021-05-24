@@ -7,7 +7,7 @@ import android.content.SharedPreferences;
 public class GlobalSharedPreference {
 
     private  static GlobalSharedPreference instance;
-    private static final String MY_PREFS_NAME = "MyPrefsWayyak";
+    private static final String MY_PREFS_NAME = "MyPrefs";
 
 
     private GlobalSharedPreference() {
